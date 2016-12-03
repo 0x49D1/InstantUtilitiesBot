@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -10,12 +11,15 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.InputMessageContents;
 using Telegram.Bot.Types.ReplyMarkups;
+using UtilitiesBot.Properties;
+using UtilitiesBot.Utilities;
 
 namespace UtilitiesBot
 {
     class Program
     {
-        private static readonly TelegramBotClient Bot = new TelegramBotClient("309590459:AAFIihLrT2rtxspV2R693jaufKOlRyrp10c");
+        private static readonly TelegramBotClient Bot = new TelegramBotClient(Settings.Default.ApiKey);
+        private static NLog.Logger logger = LogManager.GetCurrentClassLogger();
 
         static void Main(string[] args)
         {
@@ -26,17 +30,20 @@ namespace UtilitiesBot
             Bot.OnInlineResultChosen += BotOnChosenInlineResultReceived;
             Bot.OnReceiveError += BotOnReceiveError;
 
+
             var me = Bot.GetMeAsync().Result;
 
             Console.Title = me.Username;
 
             Bot.StartReceiving();
+            logger.Trace("Utilities bot starts listening");
             Console.ReadLine();
             Bot.StopReceiving();
         }
 
         private static void BotOnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
         {
+            logger.Error(receiveErrorEventArgs.ApiRequestException.ToJson());
             Debugger.Break();
         }
 
@@ -83,6 +90,15 @@ namespace UtilitiesBot
             var message = messageEventArgs.Message;
 
             if (message == null || message.Type != MessageType.TextMessage) return;
+
+            await Bot.SendChatActionAsync(message.Chat.Id, ChatAction.Typing);
+            string msg = message.Text;
+            if (msg.StartsWithOrdinalIgnoreCase("/tounixtime;/toepoch"))
+            {
+                string value = message.Text.RemoveCommandPart().Trim();
+                UnixTimeStamp stamp = new UnixTimeStamp();
+                await Bot.SendTextMessageAsync(message.Chat.Id, stamp.ConvertCommandToUnixTime(message.Text));
+            }
 
             if (message.Text.StartsWith("/inline")) // send inline keyboard
             {
@@ -157,9 +173,10 @@ namespace UtilitiesBot
 
                 await Bot.SendTextMessageAsync(message.Chat.Id, "Who or Where are you?", replyMarkup: keyboard);
             }
-            else
+            else if (message.Text.StartsWith("/start") || message.Text.StartsWith("/help"))
             {
                 var usage = @"Usage:
+/tounixtime - convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:sss 01.09.1980 06:32:32. Or just text 'now'
 /inline   - send inline keyboard
 /keyboard - send custom keyboard
 /photo    - send a photo
@@ -176,5 +193,7 @@ namespace UtilitiesBot
             await Bot.AnswerCallbackQueryAsync(callbackQueryEventArgs.CallbackQuery.Id,
                 $"Received {callbackQueryEventArgs.CallbackQuery.Data}");
         }
+
+
     }
 }

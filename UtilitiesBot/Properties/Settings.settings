@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="ApiKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">309590459:AAFIihLrT2rtxspV2R693jaufKOlRyrp10c</Value>
+      <Value Profile="(Default)">BOT TOKEN</Value>
     </Setting>
   </Settings>
 </SettingsFile>

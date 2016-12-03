@@ -25,7 +25,7 @@ namespace UtilitiesBot.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("309590459:AAFIihLrT2rtxspV2R693jaufKOlRyrp10c")]
+        [global::System.Configuration.DefaultSettingValueAttribute("BOT TOKEN")]
         public string ApiKey {
             get {
                 return ((string)(this["ApiKey"]));
