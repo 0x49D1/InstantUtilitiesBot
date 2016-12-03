@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -95,10 +96,39 @@ namespace UtilitiesBot
             string msg = message.Text;
             if (msg.StartsWithOrdinalIgnoreCase("/tounixtime;/toepoch"))
             {
-                string value = message.Text.RemoveCommandPart().Trim();
                 UnixTimeStamp stamp = new UnixTimeStamp();
                 await Bot.SendTextMessageAsync(message.Chat.Id, stamp.ConvertCommandToUnixTime(message.Text));
             }
+            if (msg.StartsWithOrdinalIgnoreCase("/hash"))
+            {
+                string msgLocal = "Proper format for /hash command is /hash sha256 test";
+                try
+                {
+                    string v = message.Text.RemoveCommandPart().Trim();
+                    string type = v.Split(' ')[0];
+                    v = v.Replace(type, "");
+                    HashCalculator hc = new HashCalculator();
+                    msgLocal = hc.CalculateHash(v, type);
+                }
+                catch (IndexOutOfRangeException ior)
+                {
+                    logger.Error(ior);
+                    msgLocal = "Proper format for /hash command is /hash sha256 test";
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex);
+                }
+                await Bot.SendTextMessageAsync(message.Chat.Id, msgLocal);
+            }
+            if (msg.StartsWithOrdinalIgnoreCase("/sha1"))
+                await Bot.SendTextMessageAsync(message.Chat.Id, msg.Trim().Hash<SHA1>());
+            if (msg.StartsWithOrdinalIgnoreCase("/sha512"))
+                await Bot.SendTextMessageAsync(message.Chat.Id, msg.Trim().Hash<SHA512>());
+            if (msg.StartsWithOrdinalIgnoreCase("/sha256"))
+                await Bot.SendTextMessageAsync(message.Chat.Id, msg.Trim().Hash<SHA256>());
+            if (msg.StartsWithOrdinalIgnoreCase("/md5"))
+                await Bot.SendTextMessageAsync(message.Chat.Id, msg.Trim().Hash<MD5>());
 
             if (message.Text.StartsWith("/inline")) // send inline keyboard
             {
@@ -177,6 +207,8 @@ namespace UtilitiesBot
             {
                 var usage = @"Usage:
 /tounixtime - convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:sss 01.09.1980 06:32:32. Or just text 'now'
+/toepoch - Calculate unix timestamp for date in format dd.MM.yyyy HH:mm:ss
+/hash - Calculate hash. Use like this: /hash sha256 test
 /inline   - send inline keyboard
 /keyboard - send custom keyboard
 /photo    - send a photo

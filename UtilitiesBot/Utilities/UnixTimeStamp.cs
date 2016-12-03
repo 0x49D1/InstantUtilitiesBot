@@ -1,9 +1,5 @@
 ﻿using NLog;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace UtilitiesBot.Utilities
 {
@@ -17,7 +13,7 @@ namespace UtilitiesBot.Utilities
             string res = "";
             try
             {
-                if (string.Equals(value, "now", StringComparison.CurrentCultureIgnoreCase))
+                if (string.IsNullOrEmpty(value) || string.Equals(value, "now", StringComparison.CurrentCultureIgnoreCase))
                     d = DateTime.Now;
                 else
                     d = DateTime.ParseExact(value, "dd.MM.yyyy HH:mm:ss", null);
