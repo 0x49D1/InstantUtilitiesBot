@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using Newtonsoft.Json.Linq;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -103,7 +104,7 @@ namespace UtilitiesBot
             Console.ForegroundColor = ConsoleColor.White;
 
             if (!msg.StartsWith("/"))
-                msg = "/ddg"; // Default command is DDG
+                msg = "/ddg " + msg.TrimStart(); // Default command is DDG
 
             string resMessage = "Nothing found for command. Try /help";
             if (msg.StartsWithOrdinalIgnoreCase("/tounixtime;/toepoch"))
@@ -113,7 +114,7 @@ namespace UtilitiesBot
             }
             if (msg.StartsWithOrdinalIgnoreCase("/ddg;/duckduckgo;/duckduckgoinstant"))
             {
-                string value = msg.RemoveCommandPart().Trim();
+                string value =HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
                 if (!string.IsNullOrEmpty(value))
                 {
                     //http://api.duckduckgo.com/?q=14ml%20in%20litre&format=json
