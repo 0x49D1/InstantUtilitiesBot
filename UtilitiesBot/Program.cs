@@ -3,8 +3,11 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
@@ -94,10 +97,45 @@ namespace UtilitiesBot
 
             await Bot.SendChatActionAsync(message.Chat.Id, ChatAction.Typing);
             string msg = message.Text;
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Chat: " + message.Chat.Id + ", Message: " + msg);
+            Console.ForegroundColor = ConsoleColor.White;
+
+            if (!msg.StartsWith("/"))
+                msg = "/ddg"; // Default command is DDG
+
+            string resMessage = "Nothing found for command. Try /help";
             if (msg.StartsWithOrdinalIgnoreCase("/tounixtime;/toepoch"))
             {
                 UnixTimeStamp stamp = new UnixTimeStamp();
-                await Bot.SendTextMessageAsync(message.Chat.Id, stamp.ConvertCommandToUnixTime(message.Text));
+                resMessage = stamp.ConvertCommandToUnixTime(message.Text);
+            }
+            if (msg.StartsWithOrdinalIgnoreCase("/ddg;/duckduckgo;/duckduckgoinstant"))
+            {
+                string value = msg.RemoveCommandPart().Trim();
+                if (!string.IsNullOrEmpty(value))
+                {
+                    //http://api.duckduckgo.com/?q=14ml%20in%20litre&format=json
+                    var httpClient = new HttpClient();
+                    var response = await httpClient.GetAsync("http://api.duckduckgo.com/?q=" + value + "&format=json");
+                    string content = await response.Content.ReadAsStringAsync();
+                    JObject jo = JObject.Parse(content);
+                    string answer = Regex.Replace(jo.SelectToken("Answer").ToString(), @"<[^>]*>", String.Empty);
+                    if (string.IsNullOrEmpty(answer))
+                    {
+                        string moreAnswer = jo.SelectToken("RelatedTopics").Any() ? jo.SelectToken("RelatedTopics")[0]["Result"].ToString() : "";
+                        if (!string.IsNullOrEmpty(moreAnswer))
+                        {
+                            moreAnswer = moreAnswer.Substring(moreAnswer.IndexOf("</a>") + 4);
+                            if (!string.IsNullOrEmpty(moreAnswer))
+                                resMessage = moreAnswer + "\n" + jo.SelectToken("RelatedTopics")[0]["Icon"]["URL"] +
+                                             "\n" + "See: https://duckduckgo.com/?q=" + value;
+                        }
+                    }
+                    else
+                        resMessage = answer;
+                }
             }
             if (msg.StartsWithOrdinalIgnoreCase("/hash"))
             {
@@ -119,16 +157,16 @@ namespace UtilitiesBot
                 {
                     logger.Error(ex);
                 }
-                await Bot.SendTextMessageAsync(message.Chat.Id, msgLocal);
+                resMessage = msgLocal;
             }
             if (msg.StartsWithOrdinalIgnoreCase("/sha1"))
-                await Bot.SendTextMessageAsync(message.Chat.Id, msg.Trim().Hash<SHA1>());
+                resMessage = msg.Trim().Hash<SHA1>();
             if (msg.StartsWithOrdinalIgnoreCase("/sha512"))
-                await Bot.SendTextMessageAsync(message.Chat.Id, msg.Trim().Hash<SHA512>());
+                resMessage = msg.Trim().Hash<SHA512>();
             if (msg.StartsWithOrdinalIgnoreCase("/sha256"))
-                await Bot.SendTextMessageAsync(message.Chat.Id, msg.Trim().Hash<SHA256>());
+                resMessage = msg.Trim().Hash<SHA256>();
             if (msg.StartsWithOrdinalIgnoreCase("/md5"))
-                await Bot.SendTextMessageAsync(message.Chat.Id, msg.Trim().Hash<MD5>());
+                resMessage = msg.Trim().Hash<MD5>();
 
             if (message.Text.StartsWith("/inline")) // send inline keyboard
             {
@@ -205,19 +243,21 @@ namespace UtilitiesBot
             }
             else if (message.Text.StartsWith("/start") || message.Text.StartsWith("/help"))
             {
-                var usage = @"Usage:
-/tounixtime - convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:sss 01.09.1980 06:32:32. Or just text 'now'
+                resMessage = @"Usage:
+Default command is /ddg
+/help - Shows all the commands with examples for some of them
+/ddg - Instant answers from duckduckgo.com. Example: /ddg 15km to miles
+/tounixtime - Convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:sss 01.09.1980 06:32:32. Or just text 'now'
 /toepoch - Calculate unix timestamp for date in format dd.MM.yyyy HH:mm:ss
 /hash - Calculate hash. Use like this: /hash sha256 test
-/inline   - send inline keyboard
-/keyboard - send custom keyboard
-/photo    - send a photo
-/request  - request location or contact
 ";
-
-                await Bot.SendTextMessageAsync(message.Chat.Id, usage,
-                    replyMarkup: new ReplyKeyboardHide());
             }
+
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine(resMessage);
+            Console.ForegroundColor = ConsoleColor.White;
+
+            await Bot.SendTextMessageAsync(message.Chat.Id, resMessage);
         }
 
         private static async void BotOnCallbackQueryReceived(object sender, CallbackQueryEventArgs callbackQueryEventArgs)
