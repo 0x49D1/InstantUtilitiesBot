@@ -35,6 +35,7 @@ namespace UtilitiesBot
         static void Main(string[] args)
         {
             string serviceIp = Utilities.Utilities.GetExternalIp();
+            logger.Trace("Service ip is " + serviceIp);
             textsToExclude.Add(serviceIp);
             Bot.OnCallbackQuery += BotOnCallbackQueryReceived;
             Bot.OnMessage += BotOnMessageReceived;
@@ -160,7 +161,7 @@ namespace UtilitiesBot
             if (msg.StartsWithOrdinalIgnoreCase("/ddg;/duckduckgo;/duckduckgoinstant"))
             {
                 string value = HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
-                if (!string.IsNullOrEmpty(value))
+                if (!string.IsNullOrEmpty(value) )
                 {
                     //http://api.duckduckgo.com/?q=14ml%20in%20litre&format=json
                     var httpClient = new HttpClient();
@@ -168,7 +169,7 @@ namespace UtilitiesBot
                     string content = await response.Content.ReadAsStringAsync();
                     JObject jo = JObject.Parse(content);
                     string answer = Regex.Replace(jo.SelectToken("Answer").ToString(), @"<[^>]*>", String.Empty);
-                    if (string.IsNullOrEmpty(answer))
+                    if (string.IsNullOrEmpty(answer) || answer.Contains("IP"))
                     {
                         string moreAnswer = jo.SelectToken("RelatedTopics").Any() ? jo.SelectToken("RelatedTopics")[0]["Result"].ToString() : "";
                         if (!string.IsNullOrEmpty(moreAnswer) && moreAnswer.Contains("</a>") && moreAnswer.IndexOf("</a>") + 4 < moreAnswer.Length)

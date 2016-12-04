@@ -7,7 +7,7 @@ namespace UtilitiesBot.Utilities
         public static string GetExternalIp()
         {
             string externalip = new WebClient().DownloadString("https://ipinfo.io/ip");
-            return externalip;
+            return externalip.Trim();
         }
     }
 }

@@ -73,6 +73,7 @@
     <Compile Include="Utilities\Extensions.cs" />
     <Compile Include="Utilities\HashCalculator.cs" />
     <Compile Include="Utilities\UnixTimeStamp.cs" />
+    <Compile Include="Utilities\Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
