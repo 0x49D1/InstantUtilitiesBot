@@ -1,5 +1,6 @@
 ﻿using NLog;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -29,9 +30,12 @@ namespace UtilitiesBot
         private static NLog.Logger logger = LogManager.GetCurrentClassLogger();
         private static MemoryCache cache = MemoryCache.Default;
         private static int locationTryCount = 0;
+        private static List<string> textsToExclude = new List<string>();
 
         static void Main(string[] args)
         {
+            string serviceIp = Utilities.Utilities.GetExternalIp();
+            textsToExclude.Add(serviceIp);
             Bot.OnCallbackQuery += BotOnCallbackQueryReceived;
             Bot.OnMessage += BotOnMessageReceived;
             Bot.OnMessageEdited += BotOnMessageReceived;
@@ -122,6 +126,8 @@ namespace UtilitiesBot
 
                 if (!string.IsNullOrEmpty(value) && !Regex.IsMatch(value, @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))
                     resMessage = "Wrong ip format!";
+                else if (string.IsNullOrEmpty(value))
+                    resMessage = "You can check your ip here: https://ipinfo.io/ip";
                 else
                 {
                     //http://ip-api.com/json/$ip
@@ -305,6 +311,12 @@ Default command is /ddg
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine(resMessage);
             Console.ForegroundColor = ConsoleColor.White;
+
+            // Remove sensitive information from resMessage
+            foreach (var tt in textsToExclude)
+            {
+                resMessage = resMessage.Replace(tt, "xx");
+            }
 
             await Bot.SendTextMessageAsync(message.Chat.Id, resMessage);
         }
