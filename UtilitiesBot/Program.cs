@@ -4,10 +4,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.Caching;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -25,6 +27,8 @@ namespace UtilitiesBot
     {
         private static readonly TelegramBotClient Bot = new TelegramBotClient(Settings.Default.ApiKey);
         private static NLog.Logger logger = LogManager.GetCurrentClassLogger();
+        private static MemoryCache cache = MemoryCache.Default;
+        private static int locationTryCount = 0;
 
         static void Main(string[] args)
         {
@@ -112,26 +116,69 @@ namespace UtilitiesBot
                 UnixTimeStamp stamp = new UnixTimeStamp();
                 resMessage = stamp.ConvertCommandToUnixTime(message.Text);
             }
+            if (msg.StartsWithOrdinalIgnoreCase("/iplocation;/geolocation;/ip"))
+            {
+                string value = HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
+
+                if (!string.IsNullOrEmpty(value) && !Regex.IsMatch(value, @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))
+                    resMessage = "Wrong ip format!";
+                else
+                {
+                    //http://ip-api.com/json/$ip
+                    var httpClient = new HttpClient();
+                    var response = await httpClient.GetAsync("http://ip-api.com/json/" + value);
+                    bool? timeout = cache.Get("iplocationtrytimeout") as bool?; // only 150 per minute allowed
+                    if (timeout != null)
+                        locationTryCount++;
+                    else
+                    {
+                        locationTryCount = 0;
+                        cache.Set("iplocationtrytimeout", true,
+                            new CacheItemPolicy() { AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(1) });
+                    }
+                    if (locationTryCount > 100)
+                        resMessage = "Try count exceeded, retry later";
+                    else
+                    {
+                        string content = await response.Content.ReadAsStringAsync();
+                        dynamic parsedJson = JsonConvert.DeserializeObject(content);
+                        resMessage = JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
+                        JObject jo = JObject.Parse(content);
+                        string country = jo.SelectToken("countryCode").ToString();
+                        if (!string.IsNullOrEmpty(country))
+                            resMessage += "\nhttp://icons.iconarchive.com/icons/famfamfam/flag/16/" + country.ToLower() +
+                                          "-icon.png";
+                    }
+                }
+            }
             if (msg.StartsWithOrdinalIgnoreCase("/ddg;/duckduckgo;/duckduckgoinstant"))
             {
-                string value =HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
+                string value = HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
                 if (!string.IsNullOrEmpty(value))
                 {
                     //http://api.duckduckgo.com/?q=14ml%20in%20litre&format=json
                     var httpClient = new HttpClient();
-                    var response = await httpClient.GetAsync("http://api.duckduckgo.com/?q=" + value + "&format=json");
+                    var response = await httpClient.GetAsync("https://api.duckduckgo.com/?q=" + value + "&format=json");
                     string content = await response.Content.ReadAsStringAsync();
                     JObject jo = JObject.Parse(content);
                     string answer = Regex.Replace(jo.SelectToken("Answer").ToString(), @"<[^>]*>", String.Empty);
                     if (string.IsNullOrEmpty(answer))
                     {
                         string moreAnswer = jo.SelectToken("RelatedTopics").Any() ? jo.SelectToken("RelatedTopics")[0]["Result"].ToString() : "";
-                        if (!string.IsNullOrEmpty(moreAnswer))
+                        if (!string.IsNullOrEmpty(moreAnswer) && moreAnswer.Contains("</a>") && moreAnswer.IndexOf("</a>") + 4 < moreAnswer.Length)
                         {
                             moreAnswer = moreAnswer.Substring(moreAnswer.IndexOf("</a>") + 4);
                             if (!string.IsNullOrEmpty(moreAnswer))
                                 resMessage = moreAnswer + "\n" + jo.SelectToken("RelatedTopics")[0]["Icon"]["URL"] +
                                              "\n" + "See: https://duckduckgo.com/?q=" + value;
+                        }
+                        else
+                        {
+                            resMessage =
+                                "Instant not found. Try the following searches:\nGoogle: https://google.com/search?q=" + value +
+                                "\nDuckduckgo: https://duckduckgo.com/?q=" + value +
+                                "\nYandex: https://yandex.ru/search/?text=" + value +
+                                "\nWikipedia: https://en.wikipedia.org/wiki/Special:Search?search=" + value;
                         }
                     }
                     else
@@ -248,6 +295,7 @@ namespace UtilitiesBot
 Default command is /ddg
 /help - Shows all the commands with examples for some of them
 /ddg - Instant answers from duckduckgo.com. Example: /ddg 15km to miles
+/ip - Information about selected ip address (location, etc)
 /tounixtime - Convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:sss 01.09.1980 06:32:32. Or just text 'now'
 /toepoch - Calculate unix timestamp for date in format dd.MM.yyyy HH:mm:ss
 /hash - Calculate hash. Use like this: /hash sha256 test
