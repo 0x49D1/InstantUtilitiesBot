@@ -71,8 +71,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Utilities\Extensions.cs" />
-    <Compile Include="Utilities\HashCalculator.cs" />
-    <Compile Include="Utilities\UnixTimeStamp.cs" />
+    <Compile Include="Utilities\InstantAnswerFactory\HashCalculatorInstantAnswer.cs" />
+    <Compile Include="Utilities\InstantAnswerFactory\IInstantAnswer.cs" />
+    <Compile Include="Utilities\InstantAnswerFactory\UnixTimeStampInstantAnswer.cs" />
     <Compile Include="Utilities\Utilities.cs" />
   </ItemGroup>
   <ItemGroup>

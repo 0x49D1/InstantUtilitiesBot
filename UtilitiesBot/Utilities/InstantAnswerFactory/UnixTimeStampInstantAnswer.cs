@@ -3,12 +3,13 @@ using System;
 
 namespace UtilitiesBot.Utilities
 {
-    public class UnixTimeStamp
+    public class UnixTimeStampInstantAnswer : IInstantAnswer
     {
         private NLog.Logger logger = LogManager.GetCurrentClassLogger();
 
-        public string ConvertCommandToUnixTime(string command) {
-            string value = command.RemoveCommandPart().Trim();
+        public string GetInstantAnswer(string question)
+        {
+            string value = question.RemoveCommandPart().Trim();
             DateTime d = DateTime.Now;
             string res = "";
             try
@@ -17,7 +18,7 @@ namespace UtilitiesBot.Utilities
                     d = DateTime.Now;
                 else
                     d = DateTime.ParseExact(value, "dd.MM.yyyy HH:mm:ss", null);
-                res =d.ToUnixTimestamp().ToString();
+                res = d.ToUnixTimestamp().ToString();
             }
             catch (FormatException fe)
             {
@@ -26,7 +27,5 @@ namespace UtilitiesBot.Utilities
             }
             return res;
         }
-
-
     }
 }

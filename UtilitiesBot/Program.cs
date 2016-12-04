@@ -2,23 +2,18 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.Caching;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Telegram.Bot;
 using Telegram.Bot.Args;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.InputMessageContents;
-using Telegram.Bot.Types.ReplyMarkups;
 using UtilitiesBot.Properties;
 using UtilitiesBot.Utilities;
 
@@ -40,7 +35,7 @@ namespace UtilitiesBot
             Bot.OnCallbackQuery += BotOnCallbackQueryReceived;
             Bot.OnMessage += BotOnMessageReceived;
             Bot.OnMessageEdited += BotOnMessageReceived;
-            Bot.OnInlineQuery += BotOnInlineQueryReceived;
+            //Bot.OnInlineQuery += BotOnInlineQueryReceived;
             Bot.OnInlineResultChosen += BotOnChosenInlineResultReceived;
             Bot.OnReceiveError += BotOnReceiveError;
 
@@ -66,39 +61,6 @@ namespace UtilitiesBot
             Console.WriteLine($"Received choosen inline result: {chosenInlineResultEventArgs.ChosenInlineResult.ResultId}");
         }
 
-        private static async void BotOnInlineQueryReceived(object sender, InlineQueryEventArgs inlineQueryEventArgs)
-        {
-            InlineQueryResult[] results = {
-                new InlineQueryResultLocation
-                {
-                    Id = "1",
-                    Latitude = 40.7058316f, // displayed result
-                    Longitude = -74.2581888f,
-                    Title = "New York",
-                    InputMessageContent = new InputLocationMessageContent // message if result is selected
-                    {
-                        Latitude = 40.7058316f,
-                        Longitude = -74.2581888f,
-                    }
-                },
-
-                new InlineQueryResultLocation
-                {
-                    Id = "2",
-                    Longitude = 52.507629f, // displayed result
-                    Latitude = 13.1449577f,
-                    Title = "Berlin",
-                    InputMessageContent = new InputLocationMessageContent // message if result is selected
-                    {
-                        Longitude = 52.507629f,
-                        Latitude = 13.1449577f
-                    }
-                }
-            };
-
-            await Bot.AnswerInlineQueryAsync(inlineQueryEventArgs.InlineQuery.Id, results, isPersonal: true, cacheTime: 0);
-        }
-
         private static async void BotOnMessageReceived(object sender, MessageEventArgs messageEventArgs)
         {
             var message = messageEventArgs.Message;
@@ -116,10 +78,10 @@ namespace UtilitiesBot
                 msg = "/ddg " + msg.TrimStart(); // Default command is DDG
 
             string resMessage = "Nothing found for command. Try /help";
+            IInstantAnswer instantAnswer = null;
             if (msg.StartsWithOrdinalIgnoreCase("/tounixtime;/toepoch"))
             {
-                UnixTimeStamp stamp = new UnixTimeStamp();
-                resMessage = stamp.ConvertCommandToUnixTime(message.Text);
+                instantAnswer = new UnixTimeStampInstantAnswer();
             }
             if (msg.StartsWithOrdinalIgnoreCase("/iplocation;/geolocation;/ip"))
             {
@@ -161,7 +123,7 @@ namespace UtilitiesBot
             if (msg.StartsWithOrdinalIgnoreCase("/ddg;/duckduckgo;/duckduckgoinstant"))
             {
                 string value = HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
-                if (!string.IsNullOrEmpty(value) )
+                if (!string.IsNullOrEmpty(value))
                 {
                     //http://api.duckduckgo.com/?q=14ml%20in%20litre&format=json
                     var httpClient = new HttpClient();
@@ -169,12 +131,12 @@ namespace UtilitiesBot
                     string content = await response.Content.ReadAsStringAsync();
                     JObject jo = JObject.Parse(content);
                     string answer = Regex.Replace(jo.SelectToken("Answer").ToString(), @"<[^>]*>", String.Empty);
-                    if (string.IsNullOrEmpty(answer) || answer.Contains("IP"))
+                    if (string.IsNullOrEmpty(answer) || answer.Contains(" IP "))// Your IP address is xxx in xxx
                     {
                         string moreAnswer = jo.SelectToken("RelatedTopics").Any() ? jo.SelectToken("RelatedTopics")[0]["Result"].ToString() : "";
-                        if (!string.IsNullOrEmpty(moreAnswer) && moreAnswer.Contains("</a>") && moreAnswer.IndexOf("</a>") + 4 < moreAnswer.Length)
+                        if (!string.IsNullOrEmpty(moreAnswer) && moreAnswer.Contains("</a>") && moreAnswer.IndexOf("</a>", StringComparison.OrdinalIgnoreCase) + 4 < moreAnswer.Length)
                         {
-                            moreAnswer = moreAnswer.Substring(moreAnswer.IndexOf("</a>") + 4);
+                            moreAnswer = moreAnswer.Substring(moreAnswer.IndexOf("</a>", StringComparison.OrdinalIgnoreCase) + 4);
                             if (!string.IsNullOrEmpty(moreAnswer))
                                 resMessage = moreAnswer + "\n" + jo.SelectToken("RelatedTopics")[0]["Icon"]["URL"] +
                                              "\n" + "See: https://duckduckgo.com/?q=" + value;
@@ -194,107 +156,7 @@ namespace UtilitiesBot
             }
             if (msg.StartsWithOrdinalIgnoreCase("/hash"))
             {
-                string msgLocal = "Proper format for /hash command is /hash sha256 test";
-                try
-                {
-                    string v = message.Text.RemoveCommandPart().Trim();
-                    string type = v.Split(' ')[0];
-                    v = v.Replace(type, "");
-                    HashCalculator hc = new HashCalculator();
-                    msgLocal = hc.CalculateHash(v, type);
-                }
-                catch (IndexOutOfRangeException ior)
-                {
-                    logger.Error(ior);
-                    msgLocal = "Proper format for /hash command is /hash sha256 test";
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex);
-                }
-                resMessage = msgLocal;
-            }
-            if (msg.StartsWithOrdinalIgnoreCase("/sha1"))
-                resMessage = msg.Trim().Hash<SHA1>();
-            if (msg.StartsWithOrdinalIgnoreCase("/sha512"))
-                resMessage = msg.Trim().Hash<SHA512>();
-            if (msg.StartsWithOrdinalIgnoreCase("/sha256"))
-                resMessage = msg.Trim().Hash<SHA256>();
-            if (msg.StartsWithOrdinalIgnoreCase("/md5"))
-                resMessage = msg.Trim().Hash<MD5>();
-
-            if (message.Text.StartsWith("/inline")) // send inline keyboard
-            {
-                await Bot.SendChatActionAsync(message.Chat.Id, ChatAction.Typing);
-
-                var keyboard = new InlineKeyboardMarkup(new[]
-                {
-                    new[] // first row
-                    {
-                        new InlineKeyboardButton("1.1"),
-                        new InlineKeyboardButton("1.2"),
-                    },
-                    new[] // second row
-                    {
-                        new InlineKeyboardButton("2.1"),
-                        new InlineKeyboardButton("2.2"),
-                    }
-                });
-
-                await Task.Delay(500); // simulate longer running task
-
-                await Bot.SendTextMessageAsync(message.Chat.Id, "Choose",
-                    replyMarkup: keyboard);
-            }
-            else if (message.Text.StartsWith("/keyboard")) // send custom keyboard
-            {
-                var keyboard = new ReplyKeyboardMarkup(new[]
-                {
-                    new [] // first row
-                    {
-                        new KeyboardButton("1.1"),
-                        new KeyboardButton("1.2"),
-                    },
-                    new [] // last row
-                    {
-                        new KeyboardButton("2.1"),
-                        new KeyboardButton("2.2"),
-                    }
-                });
-
-                await Bot.SendTextMessageAsync(message.Chat.Id, "Choose",
-                    replyMarkup: keyboard);
-            }
-            else if (message.Text.StartsWith("/photo")) // send a photo
-            {
-                await Bot.SendChatActionAsync(message.Chat.Id, ChatAction.UploadPhoto);
-
-                const string file = @"<FilePath>";
-
-                var fileName = file.Split('\\').Last();
-
-                using (var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read))
-                {
-                    var fts = new FileToSend(fileName, fileStream);
-
-                    await Bot.SendPhotoAsync(message.Chat.Id, fts, "Nice Picture");
-                }
-            }
-            else if (message.Text.StartsWith("/request")) // request location or contact
-            {
-                var keyboard = new ReplyKeyboardMarkup(new[]
-                {
-                    new KeyboardButton("Location")
-                    {
-                        RequestLocation = true
-                    },
-                    new KeyboardButton("Contact")
-                    {
-                        RequestContact = true
-                    },
-                });
-
-                await Bot.SendTextMessageAsync(message.Chat.Id, "Who or Where are you?", replyMarkup: keyboard);
+                instantAnswer = new HashCalculatorInstantAnswer();
             }
             else if (message.Text.StartsWith("/start") || message.Text.StartsWith("/help"))
             {
@@ -308,6 +170,9 @@ Default command is /ddg
 /hash - Calculate hash. Use like this: /hash sha256 test
 ";
             }
+
+            if (instantAnswer != null)
+                resMessage = instantAnswer.GetInstantAnswer(msg.RemoveCommandPart().Trim());
 
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine(resMessage);
