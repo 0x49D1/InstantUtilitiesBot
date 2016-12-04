@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/0x49D1/InstantUtilitiesBot.svg?branch=master)](https://travis-ci.org/0x49D1/InstantUtilitiesBot)
 # InstantUtilitiesBot
 Instant utilities bot for Telegram. For example it uses duckduckgo instant api.  
 ### Usage:  
