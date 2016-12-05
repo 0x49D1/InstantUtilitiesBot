@@ -11,3 +11,4 @@ Default command is /ddg, so without any specified commands it will try to use du
 /tounixtime - Convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:sss 01.09.1980 06:32:32. Or just text 'now'  
 /toepoch - Calculate unix timestamp for date in format dd.MM.yyyy HH:mm:ss  
 /hash - Calculate hash. Use like this: /hash sha256 test  
+/formatjson - Reformat the input JSON with identations   
