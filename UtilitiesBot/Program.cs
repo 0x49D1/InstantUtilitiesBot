@@ -144,10 +144,12 @@ namespace UtilitiesBot
                         else
                         {
                             resMessage =
-                                "Instant not found. Try the following searches:\nGoogle: https://google.com/search?q=" + value +
+                                "Instant not found. Try the following multi searches:\nGoogle: https://google.com/search?q=" + value +
                                 "\nDuckduckgo: https://duckduckgo.com/?q=" + value +
                                 "\nYandex: https://yandex.ru/search/?text=" + value +
-                                "\nWikipedia: https://en.wikipedia.org/wiki/Special:Search?search=" + value;
+                                "\nGitHub: https://github.com/search?utf8=%E2%9C%93&q=" + value +
+                                "\nWikipedia: https://en.wikipedia.org/wiki/Special:Search?search=" + value+                                
+                                "\nWolframAlpha: https://www.wolframalpha.com/input/?i="+value;
                         }
                     }
                     else
