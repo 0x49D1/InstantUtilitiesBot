@@ -148,6 +148,7 @@ namespace UtilitiesBot
                         }
                         else
                         {
+                            // todo remove link preview for such messages
                             resMessage =
                                 "Instant not found. Try the following multi searches:\nGoogle: https://google.com/search?q=" + value +
                                 "\nDuckduckgo: https://duckduckgo.com/?q=" + value +
