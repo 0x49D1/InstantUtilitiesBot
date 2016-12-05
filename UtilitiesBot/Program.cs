@@ -83,6 +83,11 @@ namespace UtilitiesBot
             {
                 instantAnswer = new UnixTimeStampInstantAnswer();
             }
+            if (msg.StartsWithOrdinalIgnoreCase("/formatjson;/jsonformat"))
+            {
+                string value = HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
+                // todo add method to reformat passed JSON with identations and so on
+            }
             if (msg.StartsWithOrdinalIgnoreCase("/iplocation;/geolocation;/ip"))
             {
                 string value = HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
