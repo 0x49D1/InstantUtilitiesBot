@@ -69,6 +69,7 @@ namespace UtilitiesBot
 
             await Bot.SendChatActionAsync(message.Chat.Id, ChatAction.Typing);
             string msg = message.Text;
+            bool disableMessagePreview = false;
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Chat: " + message.Chat.Id + ", Message: " + msg);
@@ -85,8 +86,25 @@ namespace UtilitiesBot
             }
             if (msg.StartsWithOrdinalIgnoreCase("/formatjson;/jsonformat"))
             {
-                string value = HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
-                // todo add method to reformat passed JSON with identations and so on
+                try
+                {
+                    bool wasEscaped = false;
+
+                    string value = msg.RemoveCommandPart().Trim();
+                    if (value.Contains("\\\""))
+                        wasEscaped = true;
+                    value = value.Replace("\\\"", "\"");
+                    dynamic parsedJson = JsonConvert.DeserializeObject(value);
+
+                    resMessage = JsonConvert.SerializeObject(parsedJson, Formatting.Indented); // todo needs refactor
+                    if (wasEscaped)
+                        resMessage = resMessage.Replace("\"", "\\\"");
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex);
+                    resMessage = "Probably JSON was not correct";
+                }
             }
             if (msg.StartsWithOrdinalIgnoreCase("/iplocation;/geolocation;/ip"))
             {
@@ -120,8 +138,7 @@ namespace UtilitiesBot
                         JObject jo = JObject.Parse(content);
                         string country = jo.SelectToken("countryCode").ToString();
                         if (!string.IsNullOrEmpty(country))
-                            resMessage += "\nhttp://icons.iconarchive.com/icons/famfamfam/flag/16/" + country.ToLower() +
-                                          "-icon.png";
+                            resMessage += "\nhttp://icons.iconarchive.com/icons/famfamfam/flag/16/" + country.ToLower() + "-icon.png";
                     }
                 }
             }
@@ -148,14 +165,14 @@ namespace UtilitiesBot
                         }
                         else
                         {
-                            // todo remove link preview for such messages
+                            disableMessagePreview = true;
                             resMessage =
                                 "Instant not found. Try the following multi searches:\nGoogle: https://google.com/search?q=" + value +
                                 "\nDuckduckgo: https://duckduckgo.com/?q=" + value +
                                 "\nYandex: https://yandex.ru/search/?text=" + value +
                                 "\nGitHub: https://github.com/search?utf8=%E2%9C%93&q=" + value +
-                                "\nWikipedia: https://en.wikipedia.org/wiki/Special:Search?search=" + value+                                
-                                "\nWolframAlpha: https://www.wolframalpha.com/input/?i="+value;
+                                "\nWikipedia: https://en.wikipedia.org/wiki/Special:Search?search=" + value +
+                                "\nWolframAlpha: https://www.wolframalpha.com/input/?i=" + value;
                         }
                     }
                     else
@@ -192,7 +209,7 @@ Default command is /ddg
                 resMessage = resMessage.Replace(tt, "xx");
             }
 
-            await Bot.SendTextMessageAsync(message.Chat.Id, resMessage);
+            await Bot.SendTextMessageAsync(message.Chat.Id, resMessage,disableMessagePreview);
         }
 
         private static async void BotOnCallbackQueryReceived(object sender, CallbackQueryEventArgs callbackQueryEventArgs)
