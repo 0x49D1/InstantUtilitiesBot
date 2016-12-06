@@ -80,6 +80,8 @@ namespace UtilitiesBot
 
             string resMessage = "Nothing found for command. Try /help";
             IInstantAnswer instantAnswer = null;
+            try 
+            {
             if (msg.StartsWithOrdinalIgnoreCase("/tounixtime;/toepoch"))
             {
                 instantAnswer = new UnixTimeStampInstantAnswer();
@@ -198,6 +200,10 @@ Default command is /ddg
 
             if (instantAnswer != null)
                 resMessage = instantAnswer.GetInstantAnswer(msg.RemoveCommandPart().Trim());
+            } catch(Exception globalEx){
+                logger.Error(globalEx); // Ignore any global exception
+                resMessage = "Something went wrong, try another request.";
+            }
 
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine(resMessage);
