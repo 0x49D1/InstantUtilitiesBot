@@ -12,8 +12,6 @@ using Newtonsoft.Json.Linq;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.InputMessageContents;
 using UtilitiesBot.Properties;
 using UtilitiesBot.Utilities;
 
@@ -82,6 +80,31 @@ namespace UtilitiesBot
             IInstantAnswer instantAnswer = null;
             try
             {
+                if (msg.StartsWithOrdinalIgnoreCase("/blockchaininfo;/blockchain;/btcinfo"))
+                {
+                    var value = msg.RemoveCommandPart().Trim();
+                    resMessage = "https://blockchain.info/search/" + value;
+
+                    //https://blockchain.info/api/blockchain_api
+                    var httpClient = new HttpClient();
+                    var response =
+                        await
+                            httpClient.GetAsync(value.Length > 36
+                                ? ("https://blockchain.info/rawtx/" + value)
+                                : ("https://blockchain.info/address/" + value + "?format=json"));
+                    var resp = await response.Content.ReadAsStringAsync();
+                    if (resp.Length > 4000)
+                        resp = resp.Substring(0, 4000) + ".....";
+                    resMessage += "\n" + resp;
+                }
+                if (msg.StartsWithOrdinalIgnoreCase("/strlen"))
+                {
+                    resMessage = msg.RemoveCommandPart().Trim().Length.ToString();
+                }
+                if (msg.StartsWithOrdinalIgnoreCase("/guid"))
+                {
+                    resMessage = Guid.NewGuid().ToString();
+                }
                 if (msg.StartsWithOrdinalIgnoreCase("/encodeurl;/urlencode"))
                 {
                     string value = msg.RemoveCommandPart().Trim();
@@ -108,7 +131,8 @@ namespace UtilitiesBot
                         value = value.Replace("\\\"", "\"");
                         dynamic parsedJson = JsonConvert.DeserializeObject(value);
 
-                        resMessage = JsonConvert.SerializeObject(parsedJson, Formatting.Indented); // todo needs refactor
+                        resMessage = JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
+                        // todo needs refactor
                         if (wasEscaped)
                             resMessage = resMessage.Replace("\"", "\\\"");
                     }
@@ -122,7 +146,9 @@ namespace UtilitiesBot
                 {
                     string value = HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
 
-                    if (!string.IsNullOrEmpty(value) && !Regex.IsMatch(value, @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))
+                    if (!string.IsNullOrEmpty(value) &&
+                        !Regex.IsMatch(value,
+                            @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))
                         resMessage = "Wrong ip format!";
                     else if (string.IsNullOrEmpty(value))
                         resMessage = "You can check your ip here: https://ipinfo.io/ip";
@@ -150,7 +176,8 @@ namespace UtilitiesBot
                             JObject jo = JObject.Parse(content);
                             string country = jo.SelectToken("countryCode").ToString();
                             if (!string.IsNullOrEmpty(country))
-                                resMessage += "\nhttp://icons.iconarchive.com/icons/famfamfam/flag/16/" + country.ToLower() + "-icon.png";
+                                resMessage += "\nhttp://icons.iconarchive.com/icons/famfamfam/flag/16/" +
+                                              country.ToLower() + "-icon.png";
                         }
                     }
                 }
@@ -161,16 +188,22 @@ namespace UtilitiesBot
                     {
                         //http://api.duckduckgo.com/?q=14ml%20in%20litre&format=json
                         var httpClient = new HttpClient();
-                        var response = await httpClient.GetAsync("https://api.duckduckgo.com/?q=" + value + "&format=json");
+                        var response =
+                            await httpClient.GetAsync("https://api.duckduckgo.com/?q=" + value + "&format=json");
                         string content = await response.Content.ReadAsStringAsync();
                         JObject jo = JObject.Parse(content);
                         string answer = Regex.Replace(jo.SelectToken("Answer").ToString(), @"<[^>]*>", String.Empty);
-                        if (string.IsNullOrEmpty(answer) || answer.Contains(" IP "))// Your IP address is xxx in xxx
+                        if (string.IsNullOrEmpty(answer) || answer.Contains(" IP ")) // Your IP address is xxx in xxx
                         {
-                            string moreAnswer = jo.SelectToken("RelatedTopics").Any() ? jo.SelectToken("RelatedTopics")[0]["Result"].ToString() : "";
-                            if (!string.IsNullOrEmpty(moreAnswer) && moreAnswer.Contains("</a>") && moreAnswer.IndexOf("</a>", StringComparison.OrdinalIgnoreCase) + 4 < moreAnswer.Length)
+                            string moreAnswer = jo.SelectToken("RelatedTopics").Any()
+                                ? jo.SelectToken("RelatedTopics")[0]["Result"].ToString()
+                                : "";
+                            if (!string.IsNullOrEmpty(moreAnswer) && moreAnswer.Contains("</a>") &&
+                                moreAnswer.IndexOf("</a>", StringComparison.OrdinalIgnoreCase) + 4 < moreAnswer.Length)
                             {
-                                moreAnswer = moreAnswer.Substring(moreAnswer.IndexOf("</a>", StringComparison.OrdinalIgnoreCase) + 4);
+                                moreAnswer =
+                                    moreAnswer.Substring(
+                                        moreAnswer.IndexOf("</a>", StringComparison.OrdinalIgnoreCase) + 4);
                                 if (!string.IsNullOrEmpty(moreAnswer))
                                     resMessage = moreAnswer + "\n" + jo.SelectToken("RelatedTopics")[0]["Icon"]["URL"] +
                                                  "\n" + "See: https://duckduckgo.com/?q=" + value;
@@ -179,7 +212,8 @@ namespace UtilitiesBot
                             {
                                 disableMessagePreview = true;
                                 resMessage =
-                                    "Instant not found. Try the following multi searches:\nGoogle: https://google.com/search?q=" + value +
+                                    "Instant not found. Try the following multi searches:\nGoogle: https://google.com/search?q=" +
+                                    value +
                                     "\nDuckduckgo: https://duckduckgo.com/?q=" + value +
                                     "\nYandex: https://yandex.ru/search/?text=" + value +
                                     "\nGitHub: https://github.com/search?utf8=%E2%9C%93&q=" + value +
@@ -203,10 +237,13 @@ Default command is /ddg
 /ddg - Instant answers from duckduckgo.com. Example: /ddg 15km to miles
 /ip - Information about selected ip address (location, etc). Example /ip xxx.xxx.xxx.xxx
 /formatjson - Reformats provided JSON string into pretty idented string
+/blockchain - Gets link to check bitcoin address/transaction information on blockchain.info
 /tounixtime - Convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:ss 01.09.1980 06:32:32. Or just text 'now'
 /hash - Calculate hash. Use like this: /hash sha256 test
 /urlencode - URL-encodes a string and returns the encoded string.
 /urldecode - Decodes URL-encoded string
+/guid - Generate Global Unique Identifier
+/strlen - Returns length of the provided string
 ";
                 }
 
@@ -228,8 +265,15 @@ Default command is /ddg
             {
                 resMessage = resMessage.Replace(tt, "xx");
             }
-
-            await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
+            try
+            {
+                await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);// ignore telegram exceptions.
+                await Bot.SendTextMessageAsync(message.Chat.Id, "OOps. Smth went wrong");
+            }
         }
 
         private static async void BotOnCallbackQueryReceived(object sender, CallbackQueryEventArgs callbackQueryEventArgs)
