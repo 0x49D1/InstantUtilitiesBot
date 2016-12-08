@@ -1,10 +1,10 @@
 ﻿using NLog;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.Caching;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using Newtonsoft.Json;
@@ -51,7 +51,7 @@ namespace UtilitiesBot
         private static void BotOnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
         {
             logger.Error(receiveErrorEventArgs.ApiRequestException.ToJson());
-            Debugger.Break();
+            //Debugger.Break();
         }
 
         private static void BotOnChosenInlineResultReceived(object sender, ChosenInlineResultEventArgs chosenInlineResultEventArgs)
@@ -96,6 +96,17 @@ namespace UtilitiesBot
                     if (resp.Length > 4000)
                         resp = resp.Substring(0, 4000) + ".....";
                     resMessage += "\n" + resp;
+                }
+                if (msg.StartsWithOrdinalIgnoreCase("/tobase64;/base64encode"))
+                {
+                    var value = msg.RemoveCommandPart().Trim();
+                    var bytes = Encoding.UTF8.GetBytes(value);
+                    resMessage = Convert.ToBase64String(bytes);
+                }
+                if (msg.StartsWithOrdinalIgnoreCase("/frombase64;/base64decode"))
+                {
+                    var value = msg.RemoveCommandPart().Trim();
+                    resMessage = Encoding.UTF8.GetString(Convert.FromBase64String(value));
                 }
                 if (msg.StartsWithOrdinalIgnoreCase("/strlen"))
                 {
@@ -239,6 +250,8 @@ Default command is /ddg
 /formatjson - Reformats provided JSON string into pretty idented string
 /blockchain - Gets link to check bitcoin address/transaction information on blockchain.info
 /tounixtime - Convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:ss 01.09.1980 06:32:32. Or just text 'now'
+/tobase64 - Encode to base64
+/frombase64 - Decode from base64
 /hash - Calculate hash. Use like this: /hash sha256 test
 /urlencode - URL-encodes a string and returns the encoded string.
 /urldecode - Decodes URL-encoded string
