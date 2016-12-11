@@ -34,5 +34,17 @@ namespace UtilitiesBot.Properties {
                 this["ApiKey"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("BOTANIO TOKEN")]
+        public string BotanIoKey {
+            get {
+                return ((string)(this["BotanIoKey"]));
+            }
+            set {
+                this["BotanIoKey"] = value;
+            }
+        }
     }
 }

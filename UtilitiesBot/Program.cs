@@ -287,6 +287,16 @@ Default command is /ddg
                 logger.Error(ex);// ignore telegram exceptions.
                 await Bot.SendTextMessageAsync(message.Chat.Id, "OOps. Smth went wrong");
             }
+            try
+            {
+                var httpClient = new HttpClient();
+                var content = new StringContent("{'command':'" + msg.RemoveCommandPart() + "'}", Encoding.UTF8, "application/json");
+                await httpClient.PostAsync("https://api.botan.io/track?token=" + Settings.Default.BotanIoKey + "&uid=UID&name=" + msg.GetCommandPart(), content);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);// ignore errors
+            }
         }
 
         private static async void BotOnCallbackQueryReceived(object sender, CallbackQueryEventArgs callbackQueryEventArgs)

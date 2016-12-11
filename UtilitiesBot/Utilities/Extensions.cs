@@ -22,6 +22,14 @@ namespace UtilitiesBot.Utilities
             return Regex.Replace(commandString, @"\/[^\s]+", "");
         }
 
+        public static string GetCommandPart(this string commandString)
+        {
+            var m =  Regex.Match(commandString, @"\/[^\s]+");
+            if (m.Success && !string.IsNullOrEmpty(m.Value))
+                return m.Value;
+            return "";
+        }
+
         public static int ToUnixTimestamp(this DateTime value)
         {
             return (int)Math.Truncate((value.ToUniversalTime().Subtract(new DateTime(1970, 1, 1))).TotalSeconds);
