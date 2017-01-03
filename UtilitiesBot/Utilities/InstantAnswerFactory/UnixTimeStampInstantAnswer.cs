@@ -27,5 +27,26 @@ namespace UtilitiesBot.Utilities
             }
             return res;
         }
+    } public class EpochConverterInstantAnswer : IInstantAnswer
+    {
+        private NLog.Logger logger = LogManager.GetCurrentClassLogger();
+
+        public string GetInstantAnswer(string question)
+        {
+            string value = question.RemoveCommandPart().Trim();
+            
+            string res = "";
+            try
+            {
+                var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                var d = epoch.AddMilliseconds(int.Parse(value));
+                res = d.ToString("dd.MM.yyyy HH:mm:ss");
+            }
+            catch (FormatException fe)
+            {
+                logger.Error(fe);
+            }
+            return res;
+        }
     }
 }

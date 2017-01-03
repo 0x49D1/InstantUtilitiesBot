@@ -130,6 +130,10 @@ namespace UtilitiesBot
                 {
                     instantAnswer = new UnixTimeStampInstantAnswer();
                 }
+                if (msg.StartsWithOrdinalIgnoreCase("/fromunixtime;/fromepoch"))
+                {
+                    instantAnswer = new EpochConverterInstantAnswer();
+                }
                 if (msg.StartsWithOrdinalIgnoreCase("/formatjson;/jsonformat"))
                 {
                     try
@@ -250,6 +254,7 @@ Default command is /ddg
 /formatjson - Reformats provided JSON string into pretty idented string
 /blockchain - Gets link to check bitcoin address/transaction information on blockchain.info
 /tounixtime - Convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:ss 01.09.1980 06:32:32. Or just text 'now'
+/fromunixtime - Converts back from epoch timestamp to datetime string.
 /tobase64 - Encode to base64
 /frombase64 - Decode from base64
 /hash - Calculate hash. Use like this: /hash sha256 test
