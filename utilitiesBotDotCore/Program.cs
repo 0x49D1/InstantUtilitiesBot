@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
-using Microsoft.AspNetCore.Hosting;
 
 namespace utilitiesBotDotCore
 {

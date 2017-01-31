@@ -57,6 +57,7 @@ namespace UtilitiesBot
         private static void BotOnChosenInlineResultReceived(object sender, ChosenInlineResultEventArgs chosenInlineResultEventArgs)
         {
             Console.WriteLine($"Received choosen inline result: {chosenInlineResultEventArgs.ChosenInlineResult.ResultId}");
+            logger.Info($"Received choosen inline result: {chosenInlineResultEventArgs.ChosenInlineResult.ResultId}");
         }
 
         private static async void BotOnMessageReceived(object sender, MessageEventArgs messageEventArgs)
@@ -72,6 +73,7 @@ namespace UtilitiesBot
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Chat: " + message.Chat.Id + ", Message: " + msg);
             Console.ForegroundColor = ConsoleColor.White;
+            logger.Info("Chat: " + message.Chat.Id + ", Message: " + msg);
 
             if (!msg.StartsWith("/"))
                 msg = "/ddg " + msg.TrimStart(); // Default command is DDG
@@ -277,6 +279,7 @@ Default command is /ddg
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine(resMessage);
             Console.ForegroundColor = ConsoleColor.White;
+            logger.Info(resMessage);
 
             // Remove sensitive information from resMessage
             foreach (var tt in textsToExclude)
