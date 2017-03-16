@@ -19,7 +19,8 @@ namespace UtilitiesBot.Utilities
 
         public static string RemoveCommandPart(this string commandString)
         {
-            return Regex.Replace(commandString, @"\/[^\s]+", "");
+            Regex regx = new Regex(@"\/[^\s]+");
+            return regx.Replace(commandString, "", 1);
         }
 
         public static string GetCommandPart(this string commandString)

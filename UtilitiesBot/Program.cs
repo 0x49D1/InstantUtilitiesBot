@@ -161,11 +161,11 @@ namespace UtilitiesBot
                 }
                 if (msg.StartsWithOrdinalIgnoreCase("/iplocation;/geolocation;/ip"))
                 {
-                    string value = HttpUtility.UrlEncode(msg.RemoveCommandPart().Trim());
+                    string value = msg.RemoveCommandPart().Trim();
+                    value = Regex.Replace(value, "[^0-9\\.]", "");
 
                     if (!string.IsNullOrEmpty(value) &&
-                        !Regex.IsMatch(value,
-                            @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))
+                        !Regex.IsMatch(value, @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))
                         resMessage = "Wrong ip format!";
                     else if (string.IsNullOrEmpty(value))
                         resMessage = "You can check your ip here: https://ipinfo.io/ip";
