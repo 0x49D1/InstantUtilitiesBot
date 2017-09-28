@@ -175,6 +175,8 @@ namespace UtilitiesBot
                             resMessage = "";
                             foreach (var ipvalue in ips)
                             {
+                                Console.WriteLine("Checking " + ipvalue);
+
                                 //http://ip-api.com/json/$ip
                                 var httpClient = new HttpClient();
                                 var response = await httpClient.GetAsync("http://ip-api.com/json/" + ipvalue);
@@ -188,7 +190,7 @@ namespace UtilitiesBot
                                         new CacheItemPolicy() { AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(1) });
                                 }
                                 if (locationTryCount > 100)
-                                    resMessage += "Try count exceeded, retry later";
+                                    resMessage += "Try count exceeded, retry later. http://ip-api.com/json/" + ipvalue + "\n";
                                 else
                                 {
                                     string content = await response.Content.ReadAsStringAsync();
@@ -200,9 +202,12 @@ namespace UtilitiesBot
                                         resMessage += "\nhttp://icons.iconarchive.com/icons/famfamfam/flag/16/" +
                                                       country.ToLower() + "-icon.png\n";
                                 }
+
+                                await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
+                                resMessage = "";
                             }
                         }
-                    }                 
+                    }
                 }
                 if (msg.StartsWithOrdinalIgnoreCase("/ddg;/duckduckgo;/duckduckgoinstant"))
                 {
@@ -294,7 +299,8 @@ Default command is /ddg
             }
             try
             {
-                await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
+                if (!string.IsNullOrEmpty(resMessage))
+                    await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
             }
             catch (Exception ex)
             {
