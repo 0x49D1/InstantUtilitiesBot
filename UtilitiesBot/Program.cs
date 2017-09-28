@@ -162,41 +162,47 @@ namespace UtilitiesBot
                 if (msg.StartsWithOrdinalIgnoreCase("/iplocation;/geolocation;/ip"))
                 {
                     string value = msg.RemoveCommandPart().Trim();
-                    value = Regex.Replace(value, "[^0-9\\.]", "");
-
-                    if (!string.IsNullOrEmpty(value) &&
-                        !Regex.IsMatch(value, @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))
-                        resMessage = "Wrong ip format!";
-                    else if (string.IsNullOrEmpty(value))
+                    if (string.IsNullOrEmpty(value))
                         resMessage = "You can check your ip here: https://ipinfo.io/ip";
                     else
                     {
-                        //http://ip-api.com/json/$ip
-                        var httpClient = new HttpClient();
-                        var response = await httpClient.GetAsync("http://ip-api.com/json/" + value);
-                        bool? timeout = cache.Get("iplocationtrytimeout") as bool?; // only 150 per minute allowed
-                        if (timeout != null)
-                            locationTryCount++;
+
+                        var ips = Regex.Matches(value, @"(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)").Cast<Match>().Select(m => m.Value).ToArray();
+                        if (ips.Length == 0)
+                            resMessage = "Wrong ip format!";
                         else
                         {
-                            locationTryCount = 0;
-                            cache.Set("iplocationtrytimeout", true,
-                                new CacheItemPolicy() { AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(1) });
+                            resMessage = "";
+                            foreach (var ipvalue in ips)
+                            {
+                                //http://ip-api.com/json/$ip
+                                var httpClient = new HttpClient();
+                                var response = await httpClient.GetAsync("http://ip-api.com/json/" + ipvalue);
+                                bool? timeout = cache.Get("iplocationtrytimeout") as bool?; // only 150 per minute allowed
+                                if (timeout != null)
+                                    locationTryCount++;
+                                else
+                                {
+                                    locationTryCount = 0;
+                                    cache.Set("iplocationtrytimeout", true,
+                                        new CacheItemPolicy() { AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(1) });
+                                }
+                                if (locationTryCount > 100)
+                                    resMessage += "Try count exceeded, retry later";
+                                else
+                                {
+                                    string content = await response.Content.ReadAsStringAsync();
+                                    dynamic parsedJson = JsonConvert.DeserializeObject(content);
+                                    resMessage += JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
+                                    JObject jo = JObject.Parse(content);
+                                    string country = jo.SelectToken("countryCode").ToString();
+                                    if (!string.IsNullOrEmpty(country))
+                                        resMessage += "\nhttp://icons.iconarchive.com/icons/famfamfam/flag/16/" +
+                                                      country.ToLower() + "-icon.png\n";
+                                }
+                            }
                         }
-                        if (locationTryCount > 100)
-                            resMessage = "Try count exceeded, retry later";
-                        else
-                        {
-                            string content = await response.Content.ReadAsStringAsync();
-                            dynamic parsedJson = JsonConvert.DeserializeObject(content);
-                            resMessage = JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
-                            JObject jo = JObject.Parse(content);
-                            string country = jo.SelectToken("countryCode").ToString();
-                            if (!string.IsNullOrEmpty(country))
-                                resMessage += "\nhttp://icons.iconarchive.com/icons/famfamfam/flag/16/" +
-                                              country.ToLower() + "-icon.png";
-                        }
-                    }
+                    }                 
                 }
                 if (msg.StartsWithOrdinalIgnoreCase("/ddg;/duckduckgo;/duckduckgoinstant"))
                 {
