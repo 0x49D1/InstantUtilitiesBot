@@ -14,6 +14,7 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
 using UtilitiesBot.Properties;
 using UtilitiesBot.Utilities;
+using System.Threading;
 
 namespace UtilitiesBot
 {
@@ -206,6 +207,7 @@ namespace UtilitiesBot
                                 {
                                     await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
                                     resMessage = "";
+                                    Thread.Sleep(80);
                                 }
                                 catch (Exception ex)
                                 {
@@ -291,6 +293,7 @@ Default command is /ddg
             catch (Exception globalEx)
             {
                 logger.Error(globalEx); // Ignore any global exception
+                Console.Write(globalEx.ToString());
                 resMessage = "Something went wrong, try another request.";
             }
 
