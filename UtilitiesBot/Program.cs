@@ -287,15 +287,15 @@ namespace UtilitiesBot
 Default command is /ddg
 /help - Shows all the commands with examples for some of them
 /ddg - Instant answers from duckduckgo.com. Example: /ddg 15km to miles
-/ip - Information about selected ip address (location, etc). Example /ip xxx.xxx.xxx.xxx
+/ip - Information about selected ip address (location, etc). But feel free to mess IP with texts or send LIST of IPs. Example /ip xxx.xxx.xxx.xxx
 /formatjson - Reformats provided JSON string into pretty idented string
 /blockchain - Gets link to check bitcoin address/transaction information on blockchain.info
 /tounixtime - Convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:ss 01.09.1980 06:32:32. Or just text 'now'
-/fromunixtime - Converts back from epoch timestamp to datetime string.
+/fromunixtime - Converts back from epoch timestamp to datetime string
 /tobase64 - Encode to base64
 /frombase64 - Decode from base64
 /hash - Calculate hash. Use like this: /hash sha256 test
-/urlencode - URL-encodes a string and returns the encoded string.
+/urlencode - URL-encodes a string and returns the encoded string
 /urldecode - Decodes URL-encoded string
 /guid - Generate Global Unique Identifier
 /strlen - Returns length of the provided string
