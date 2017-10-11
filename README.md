@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/0x49D1/InstantUtilitiesBot.svg?branch=master)](https://travis-ci.org/0x49D1/InstantUtilitiesBot)
 # InstantUtilitiesBot
-Instant utilities bot for Telegram. For example it uses duckduckgo instant api.  
+Instant utilities bot for Telegram. For example it uses duckduckgo instant api.    
+Find the bot in [telegram](https://telegram.org/): @instant_utilities_bot
 ### Usage:  
 Default command is /ddg, so without any specified commands it will try to use duckduck instant.  
 /help - Shows all the commands with examples for some of them  
