@@ -162,9 +162,11 @@ namespace UtilitiesBot
                 }
                 if (msg.StartsWithOrdinalIgnoreCase("/iplocation;/geolocation;/ip"))
                 {
+
+                    string ipCheckSource = "http://ip-api.com/json/";
                     string value = msg.RemoveCommandPart().Trim();
                     if (string.IsNullOrEmpty(value))
-                        resMessage = "You can check your ip here: https://ipinfo.io/ip";
+                        resMessage = "You can check your ip here: http://ipinfo.io/ip";
                     else
                     {
 
@@ -178,9 +180,9 @@ namespace UtilitiesBot
                             {
                                 Console.WriteLine("Checking " + ipvalue);
 
-                                //http://ip-api.com/json/$ip
+                                //https://ip-api.com/json/$ip
                                 var httpClient = new HttpClient();
-                                var response = await httpClient.GetAsync("http://ip-api.com/json/" + ipvalue);
+                                var response =  httpClient.GetAsync(ipCheckSource + ipvalue).Result;
                                 bool? timeout = cache.Get("iplocationtrytimeout") as bool?; // only 150 per minute allowed
                                 if (timeout != null)
                                     locationTryCount++;
@@ -194,25 +196,38 @@ namespace UtilitiesBot
                                     resMessage += "Try count exceeded, retry later. http://ip-api.com/json/" + ipvalue + "\n";
                                 else
                                 {
-                                    string content = await response.Content.ReadAsStringAsync();
+                                    string content = response.Content.ReadAsStringAsync().Result;
                                     dynamic parsedJson = JsonConvert.DeserializeObject(content);
                                     resMessage += JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
                                     JObject jo = JObject.Parse(content);
-                                    string country = jo.SelectToken("countryCode").ToString();
+                                    if (jo == null)
+                                        continue;
+                                    string country = jo.SelectToken("countryCode")?.ToString() ?? jo.SelectToken("country_code")?.ToString();
+
                                     if (!string.IsNullOrEmpty(country))
                                         resMessage += "\nhttp://icons.iconarchive.com/icons/famfamfam/flag/16/" +
                                                       country.ToLower() + "-icon.png\n";
                                 }
                                 try
                                 {
+                                    Thread.Sleep(400);
                                     await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
-                                    resMessage = "";
-                                    Thread.Sleep(80);
+                                    
+                                    resMessage = "";                                   
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine(resMessage + " exception: " + ex.ToString());
-                                    await Bot.SendTextMessageAsync(message.Chat.Id, "Something went wrong on " + resMessage, disableMessagePreview);
+                                    if (ex.ToString().Contains("Too Many Requests"))
+                                        ipCheckSource = "https://freegeoip.net/json/";
+                                    
+                                    Console.WriteLine(string.Format("{0} {1} exception: {2}", resMessage, ipvalue, ex));
+                                    try
+                                    {
+                                        await Bot.SendTextMessageAsync(message.Chat.Id, "Something went wrong on " + resMessage, disableMessagePreview);
+                                    }
+                                    catch (Exception) { }
+
+                                    resMessage = "";
                                 }
                             }
                         }
