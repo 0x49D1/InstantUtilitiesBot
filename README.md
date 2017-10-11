@@ -18,7 +18,7 @@ Default command is /ddg, so without any specified commands it will try to use du
 /hash - Calculate hash. Use like this: /hash sha256 test  
 /formatjson - Reformats provided JSON string into pretty idented string
 /tobase64 - Encode to base64
-/frombase64 - Decode from base64
-/urlencode - URL-encodes a string and returns the encoded string.
-/urldecode - Decodes URL-encoded string
+/frombase64 - Decode from base64     
+/urlencode - URL-encodes a string and returns the encoded string.    
+/urldecode - Decodes URL-encoded string   
 /strlen - Returns length of the provided string
