@@ -202,9 +202,16 @@ namespace UtilitiesBot
                                         resMessage += "\nhttp://icons.iconarchive.com/icons/famfamfam/flag/16/" +
                                                       country.ToLower() + "-icon.png\n";
                                 }
-
-                                await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
-                                resMessage = "";
+                                try
+                                {
+                                    await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
+                                    resMessage = "";
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(resMessage + " exception: " + ex.ToString());
+                                    await Bot.SendTextMessageAsync(message.Chat.Id, "Something went wrong on " + resMessage, disableMessagePreview);
+                                }
                             }
                         }
                     }
