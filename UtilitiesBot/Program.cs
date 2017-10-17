@@ -182,7 +182,7 @@ namespace UtilitiesBot
 
                                 //https://ip-api.com/json/$ip
                                 var httpClient = new HttpClient();
-                                var response =  httpClient.GetAsync(ipCheckSource + ipvalue).Result;
+                                var response = httpClient.GetAsync(ipCheckSource + ipvalue).Result;
                                 bool? timeout = cache.Get("iplocationtrytimeout") as bool?; // only 150 per minute allowed
                                 if (timeout != null)
                                     locationTryCount++;
@@ -211,19 +211,19 @@ namespace UtilitiesBot
                                 try
                                 {
                                     Thread.Sleep(400);
-                                    await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
-                                    
-                                    resMessage = "";                                   
+                                    await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableWebPagePreview: disableMessagePreview);
+
+                                    resMessage = "";
                                 }
                                 catch (Exception ex)
                                 {
                                     if (ex.ToString().Contains("Too Many Requests"))
                                         ipCheckSource = "https://freegeoip.net/json/";
-                                    
+
                                     Console.WriteLine(string.Format("{0} {1} exception: {2}", resMessage, ipvalue, ex));
                                     try
                                     {
-                                        await Bot.SendTextMessageAsync(message.Chat.Id, "Something went wrong on " + resMessage, disableMessagePreview);
+                                        await Bot.SendTextMessageAsync(message.Chat.Id, "Something went wrong on " + resMessage, disableWebPagePreview: disableMessagePreview);
                                     }
                                     catch (Exception) { }
 
@@ -325,7 +325,7 @@ Default command is /ddg
             try
             {
                 if (!string.IsNullOrEmpty(resMessage))
-                    await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableMessagePreview);
+                    await Bot.SendTextMessageAsync(message.Chat.Id, resMessage, disableWebPagePreview: disableMessagePreview);
             }
             catch (Exception ex)
             {
