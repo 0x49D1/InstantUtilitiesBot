@@ -240,3 +240,19 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+\.idea/\.idea\.UtilitiesBot/\.idea/\.name
+
+\.idea/\.idea\.UtilitiesBot/\.idea/contentModel\.xml
+
+\.idea/\.idea\.UtilitiesBot/\.idea/indexLayout\.xml
+
+\.idea/\.idea\.UtilitiesBot/\.idea/modules\.xml
+
+\.idea/\.idea\.UtilitiesBot/\.idea/vcs\.xml
+
+\.idea/\.idea\.UtilitiesBot/\.idea/workspace\.xml
+
+\.idea/\.idea\.UtilitiesBot/riderModule\.iml
+
+\.idea/\.idea\.UtilitiesBot/\.idea/
