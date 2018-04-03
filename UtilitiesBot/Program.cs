@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.Caching;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -66,8 +67,16 @@ namespace UtilitiesBot
             var message = messageEventArgs.Message;
 
             if (message == null || message.Type != MessageType.TextMessage) return;
+            try
+            {
+                await Bot.SendChatActionAsync(message.Chat.Id, ChatAction.Typing);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);// ignore telegram exceptions.
+                await Bot.SendTextMessageAsync(message.Chat.Id, "OOps. Smth went wrong");
+            }
 
-            await Bot.SendChatActionAsync(message.Chat.Id, ChatAction.Typing);
             string msg = message.Text;
             bool disableMessagePreview = false;
 
