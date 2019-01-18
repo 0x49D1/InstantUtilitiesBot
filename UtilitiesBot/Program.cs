@@ -74,7 +74,15 @@ namespace UtilitiesBot
             catch (Exception ex)
             {
                 logger.Error(ex);// ignore telegram exceptions.
-                await Bot.SendTextMessageAsync(message.Chat.Id, "OOps. Smth went wrong");
+                try
+                {
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "OOps. Smth went wrong");
+                }
+                catch (Exception e)
+                {
+                    logger.Error(e);
+                    // ignore for now
+                }
             }
 
             string msg = message.Text;
@@ -339,7 +347,15 @@ Default command is /ddg
             catch (Exception ex)
             {
                 logger.Error(ex);// ignore telegram exceptions.
-                await Bot.SendTextMessageAsync(message.Chat.Id, "OOps. Smth went wrong");
+                try
+                {
+                    await Bot.SendTextMessageAsync(message.Chat.Id, "OOps. Smth went wrong");
+                }
+                catch (Exception e)
+                {
+                    logger.Error(e);
+                    //Ignore this one too
+                }
             }
             try
             {
