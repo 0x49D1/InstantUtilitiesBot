@@ -100,6 +100,11 @@ namespace UtilitiesBot
             IInstantAnswer instantAnswer = null;
             try
             {
+                if (msg.StartsWithOrdinalIgnoreCase("/blockchair"))
+                {
+                    var value = msg.RemoveCommandPart().Trim();
+                    resMessage = "https://blockchair.com/search?q=" + value;
+                }
                 if (msg.StartsWithOrdinalIgnoreCase("/blockchaininfo;/blockchain;/btcinfo"))
                 {
                     var value = msg.RemoveCommandPart().Trim();
@@ -307,6 +312,7 @@ Default command is /ddg
 /ip - Information about selected ip address (location, etc). But feel free to mess IP with texts or send LIST of IPs. Example /ip xxx.xxx.xxx.xxx
 /formatjson - Reformats provided JSON string into pretty idented string
 /blockchain - Gets link to check bitcoin address/transaction information on blockchain.info
+/blockchair - Just generate link to search blockchair.com
 /tounixtime - Convert datetime to unixtimestamp. Message must be like in format: dd.MM.yyyy HH:mm:ss 01.09.1980 06:32:32. Or just text 'now'
 /fromunixtime - Converts back from epoch timestamp to datetime string
 /tobase64 - Encode to base64
