@@ -9,6 +9,7 @@ Default command is /ddg, so without any specified commands it will try to use du
 /ddg - Instant answers from duckduckgo.com. Example: /ddg 15km to miles       
 /ip - Information about selected ip address (location, etc). But feel free to mess IP with texts or send LIST of IPs. Example /ip xxx.xxx.xxx.xxx     
 /blockchain - Gets link to check bitcoin address/transaction information on blockchain.info
+/blockchair - Just generate link to search blockchair.com - has some nice preview right in Telegram
 /hash - Calculate hash. Use like this: /hash sha256 test     
 /guid - Generate Global Unique Identifier        
 **Internal commands:**       
