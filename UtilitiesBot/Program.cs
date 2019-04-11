@@ -66,7 +66,7 @@ namespace UtilitiesBot
         {
             var message = messageEventArgs.Message;
 
-            if (message == null || message.Type != MessageType.TextMessage) return;
+            if (message == null || message.Type != MessageType.Text) return;
             try
             {
                 await Bot.SendChatActionAsync(message.Chat.Id, ChatAction.Typing);
